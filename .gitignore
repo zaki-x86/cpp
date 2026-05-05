@@ -1,0 +1,39 @@
+# CMake build directories
+build/
+build-*/
+out/
+
+# CMake generated
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+
+# Compiled output
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Coverage
+*.gcno
+*.gcda
+*.lcov
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Sanitizer logs
+*.log
+
+# PGO profiles
+*.profraw
+*.profdata
+default.profdata
