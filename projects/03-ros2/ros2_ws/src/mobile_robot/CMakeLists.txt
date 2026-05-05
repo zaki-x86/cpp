@@ -19,6 +19,22 @@ include_directories(include)
 add_library(a_star src/a_star.cpp)
 target_include_directories(a_star PUBLIC include)
 
+# OdometryNode
+add_executable(odometry_node src/odometry_node.cpp src/odometry_node_main.cpp)
+ament_target_dependencies(odometry_node rclcpp rclcpp_lifecycle tf2_ros tf2_geometry_msgs geometry_msgs custom_interfaces)
+
+# VelocityController
+add_executable(velocity_controller src/velocity_controller.cpp src/velocity_controller_main.cpp)
+ament_target_dependencies(velocity_controller rclcpp rclcpp_lifecycle geometry_msgs custom_interfaces)
+
+# MapPublisher
+add_executable(map_publisher src/map_publisher.cpp src/map_publisher_main.cpp)
+ament_target_dependencies(map_publisher rclcpp rclcpp_lifecycle tf2_ros nav_msgs geometry_msgs)
+
+install(TARGETS odometry_node velocity_controller map_publisher
+  DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY launch rviz DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_path_planner test/test_path_planner.cpp)
