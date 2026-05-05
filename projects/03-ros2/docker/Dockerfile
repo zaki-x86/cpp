@@ -1,8 +1,6 @@
 FROM ros:humble-ros-base-jammy
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-pip \
@@ -18,11 +16,11 @@ RUN apt-get update && apt-get install -y \
     ros-humble-ament-cmake-gtest \
     x11-apps \
     mesa-utils \
-    libgl1-mesa-glx \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Initialize rosdep
-RUN rosdep init || true && rosdep update
+RUN rosdep init || true && rosdep update --rosdistro humble
 
 WORKDIR /ros2_ws
 

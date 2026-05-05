@@ -26,4 +26,4 @@ services:
       - DISPLAY=${DISPLAY}
       - ROS_DOMAIN_ID=42
     network_mode: host
-    command: bash -c "source /ros2_ws/install/setup.bash && rviz2 -d /ros2_ws/src/mobile_robot/rviz/full_demo.rviz"
+    command: bash -c "if [ -f /ros2_ws/src/mobile_robot/rviz/full_demo.rviz ]; then rviz2 -d /ros2_ws/src/mobile_robot/rviz/full_demo.rviz; else rviz2; fi"
