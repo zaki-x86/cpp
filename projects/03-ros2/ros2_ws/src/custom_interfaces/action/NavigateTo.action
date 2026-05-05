@@ -1,0 +1,11 @@
+float64 x
+float64 y
+float64 theta
+float64 tolerance
+---
+bool reached
+float64 final_error
+string message
+---
+float64 distance_remaining
+float64 heading_error

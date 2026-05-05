@@ -1,0 +1,7 @@
+custom_interfaces/JointTrajectoryCustom trajectory
+---
+bool success
+string message
+---
+float64 progress
+string current_joint
