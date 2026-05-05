@@ -28,7 +28,7 @@ const std::vector<Cell> DIRS = {{-1,0},{1,0},{0,-1},{0,1}};
 
 Path a_star(const Grid& grid, Cell start, Cell goal) {
     if (!in_bounds(grid, start) || !in_bounds(grid, goal)) return {};
-    if (!passable(grid, goal)) return {};
+    if (!passable(grid, start) || !passable(grid, goal)) return {};
     if (start == goal) return {start};
 
     // {f_score, cell}
