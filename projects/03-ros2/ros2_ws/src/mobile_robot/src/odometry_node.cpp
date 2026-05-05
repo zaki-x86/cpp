@@ -21,6 +21,7 @@ OdometryNode::CallbackReturn OdometryNode::on_configure(const rclcpp_lifecycle::
 
 OdometryNode::CallbackReturn OdometryNode::on_activate(const rclcpp_lifecycle::State&) {
     RCLCPP_INFO(get_logger(), "Activating OdometryNode");
+    last_time_ = now();
     odom_pub_->on_activate();
     timer_ = create_wall_timer(
         std::chrono::milliseconds(20),
@@ -45,6 +46,7 @@ OdometryNode::CallbackReturn OdometryNode::on_cleanup(const rclcpp_lifecycle::St
 }
 
 void OdometryNode::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
+    std::lock_guard<std::mutex> lock(vel_mutex_);
     vx_     = msg->linear.x;
     vtheta_ = msg->angular.z;
 }
@@ -54,17 +56,23 @@ void OdometryNode::timer_callback() {
     double dt = (now - last_time_).seconds();
     last_time_ = now;
 
+    double vx, vtheta;
+    {
+        std::lock_guard<std::mutex> lock(vel_mutex_);
+        vx = vx_; vtheta = vtheta_;
+    }
+
     // Integrate velocity into pose
-    theta_ += vtheta_ * dt;
-    x_ += vx_ * std::cos(theta_) * dt;
-    y_ += vx_ * std::sin(theta_) * dt;
+    theta_ += vtheta * dt;
+    x_ += vx * std::cos(theta_) * dt;
+    y_ += vx * std::sin(theta_) * dt;
 
     // Publish odometry
     auto msg = custom_interfaces::msg::Odometry2D{};
     msg.header.stamp    = now;
     msg.header.frame_id = "odom";
     msg.x = x_; msg.y = y_; msg.theta = theta_;
-    msg.vx = vx_; msg.vtheta = vtheta_;
+    msg.vx = vx; msg.vtheta = vtheta;
     odom_pub_->publish(msg);
 
     // Broadcast TF odom -> base_link

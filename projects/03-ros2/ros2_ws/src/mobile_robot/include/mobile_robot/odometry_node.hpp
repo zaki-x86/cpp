@@ -5,6 +5,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <custom_interfaces/msg/odometry2_d.hpp>
 #include <memory>
+#include <mutex>
 
 namespace mobile_robot {
 
@@ -29,7 +30,8 @@ private:
 
     double x_{0.0}, y_{0.0}, theta_{0.0};
     double vx_{0.0}, vtheta_{0.0};
-    rclcpp::Time last_time_;
+    rclcpp::Time last_time_{0, 0, RCL_ROS_TIME};
+    mutable std::mutex vel_mutex_;
 };
 
 }  // namespace mobile_robot

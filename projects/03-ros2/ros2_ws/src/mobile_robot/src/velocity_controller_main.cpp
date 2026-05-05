@@ -5,4 +5,5 @@ int main(int argc, char* argv[]) {
     auto node = std::make_shared<mobile_robot::VelocityController>();
     rclcpp::spin(node->get_node_base_interface());
     rclcpp::shutdown();
+    return 0;
 }
