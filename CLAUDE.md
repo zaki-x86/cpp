@@ -21,6 +21,13 @@
 - Specs: `docs/superpowers/specs/` | Plans: `docs/superpowers/plans/`
 - All docs/diagrams as `.md` with Mermaid blocks — no browser tools.
 
+## Multi-Agent System
+- Two AI agents collaborate on this workspace. Each owns `.agents/<name>/` with an `identity.md` and a `log.md`.
+- **Atlas** (`claude-sonnet-4-6`) — lead C++ infrastructure agent. Log: `.agents/atlas/log.md`.
+- Before starting any task, read all `.agents/*/log.md` files to see what is claimed or in progress.
+- After completing any task, append a timestamped entry to your own log (format in `.agents/README.md`).
+- Cross-agent handoffs go in `.agents/incoming/`. Log files are gitignored; identity files are committed.
+
 ## foundation library (02-foundation) API notes
 - `Buffer::data()` returns `std::byte*` — use `std::byte{val}` to assign and `std::to_integer<int>()` to read.
 - `Sorter<Policy>::sort(first, last)` takes iterators, not a container.
