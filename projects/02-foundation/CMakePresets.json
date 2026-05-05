@@ -1,0 +1,26 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base", "hidden": true, "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": { "CMAKE_EXPORT_COMPILE_COMMANDS": "ON" }
+    },
+    { "name": "debug",   "inherits": "base", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" } },
+    { "name": "release", "inherits": "base", "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" } },
+    { "name": "asan",    "inherits": "base", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ENABLE_SANITIZER_ADDRESS": "ON", "ENABLE_SANITIZER_LEAK": "ON" } },
+    { "name": "tsan",    "inherits": "base", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ENABLE_SANITIZER_THREAD": "ON" } },
+    { "name": "ubsan",   "inherits": "base", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ENABLE_SANITIZER_UNDEFINED": "ON" } }
+  ],
+  "buildPresets": [
+    { "name": "debug",   "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "asan",    "configurePreset": "asan" },
+    { "name": "tsan",    "configurePreset": "tsan" }
+  ],
+  "testPresets": [
+    { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
+    { "name": "asan",  "configurePreset": "asan",  "output": { "outputOnFailure": true } },
+    { "name": "tsan",  "configurePreset": "tsan",  "output": { "outputOnFailure": true } }
+  ]
+}
