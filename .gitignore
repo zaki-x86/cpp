@@ -37,3 +37,4 @@ coverage/
 *.profraw
 *.profdata
 default.profdata
+.agents/*/log.md
