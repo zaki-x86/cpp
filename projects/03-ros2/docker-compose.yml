@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: ros2_showcase:humble
+    volumes:
+      - ./ros2_ws:/ros2_ws
+    environment:
+      - ROS_DOMAIN_ID=42
+    network_mode: host
+    stdin_open: true
+    tty: true
+    command: bash
+
+  rviz2:
+    image: ros2_showcase:humble
+    depends_on:
+      - dev
+    volumes:
+      - ./ros2_ws:/ros2_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=42
+    network_mode: host
+    command: bash -c "source /ros2_ws/install/setup.bash && rviz2 -d /ros2_ws/src/mobile_robot/rviz/full_demo.rviz"
