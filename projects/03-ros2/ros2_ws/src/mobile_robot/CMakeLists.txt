@@ -31,7 +31,12 @@ ament_target_dependencies(velocity_controller rclcpp rclcpp_lifecycle geometry_m
 add_executable(map_publisher src/map_publisher.cpp src/map_publisher_main.cpp)
 ament_target_dependencies(map_publisher rclcpp rclcpp_lifecycle tf2_ros nav_msgs geometry_msgs)
 
-install(TARGETS odometry_node velocity_controller map_publisher
+# PathPlannerServer
+add_executable(path_planner_server src/path_planner_server.cpp src/path_planner_main.cpp)
+ament_target_dependencies(path_planner_server rclcpp rclcpp_action nav_msgs custom_interfaces geometry_msgs)
+target_link_libraries(path_planner_server a_star)
+
+install(TARGETS odometry_node velocity_controller map_publisher path_planner_server
   DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch rviz DESTINATION share/${PROJECT_NAME})
 
