@@ -82,7 +82,7 @@ target_compile_definitions(mylib
 
 # Conditional on feature support
 target_compile_options(mylib PRIVATE
-  $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
+  $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra>
   $<$<CXX_COMPILER_ID:Clang>:-Weverything>
 )
 ```
@@ -174,8 +174,8 @@ CMake then calls the cross compiler for all targets. `find_program` still uses t
 
 ```cmake
 set_target_properties(mylib PROPERTIES UNITY_BUILD ON)
-# Or per target:
-target_sources(mylib PRIVATE UNITY_GROUP "group1" src/a.cpp src/b.cpp)
+set_source_files_properties(src/a.cpp src/b.cpp
+    PROPERTIES UNITY_GROUP "group1")
 ```
 
 **Precompiled headers** (PCH) compile a header once and reuse the binary across translation units:
@@ -216,10 +216,10 @@ Run: `cmake --install build/release --prefix /usr/local`
 CPack generates installers (`.deb`, `.rpm`, `.tar.gz`, NSIS on Windows):
 
 ```cmake
-include(CPack)
 set(CPACK_PACKAGE_NAME "MyLib")
 set(CPACK_PACKAGE_VERSION "1.0.0")
 set(CPACK_GENERATOR "TGZ;DEB")
+include(CPack)
 ```
 
 Run: `cd build/release && cpack`

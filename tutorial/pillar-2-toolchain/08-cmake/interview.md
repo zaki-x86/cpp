@@ -74,7 +74,7 @@
 
 **Q: What is the difference between add_custom_command and add_custom_target?**
 
-**A:** `add_custom_command` generates a file as a build step and participates in dependency tracking — if its output file is out of date relative to its inputs, it re-runs. It must be associated with a target (via `DEPENDS`) to be built. `add_custom_target` is always out of date and always runs when built — it has no output file tracking. Use `add_custom_command` for code generation (protobuf, GLSL compilation) where you want incremental builds. Use `add_custom_target` for utility commands like running tests, formatting, or generating documentation where you always want the action to run.
+**A:** `add_custom_command` generates a file as a build step and participates in dependency tracking — if its output file is out of date relative to its inputs, it re-runs. Its `DEPENDS` argument lists *input* files it reads. To include its outputs in the build, add the output file to a target's `target_sources()` call. `add_custom_target` is always out of date and always runs when built — it has no output file tracking. Use `add_custom_command` for code generation (protobuf, GLSL compilation) where you want incremental builds. Use `add_custom_target` for utility commands like running tests, formatting, or generating documentation where you always want the action to run.
 
 **Trap:** Using `add_custom_target` for code generation and being confused why it re-runs even when inputs have not changed, or using `add_custom_command` for a utility target and being confused why it never runs.
 

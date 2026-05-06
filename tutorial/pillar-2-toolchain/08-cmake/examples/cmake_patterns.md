@@ -61,9 +61,9 @@ endif()
 
 ```cmake
 target_compile_options(mylib PRIVATE
-    $<$<CXX_COMPILER_ID:GNU>:   -Wall -Wextra -Wpedantic>
-    $<$<CXX_COMPILER_ID:Clang>: -Weverything -Wno-c++98-compat>
-    $<$<PLATFORM_ID:Windows>:   /W4 /WX>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-Wpedantic>
+    $<$<CXX_COMPILER_ID:Clang>:-Weverything;-Wno-c++98-compat>
+    $<$<PLATFORM_ID:Windows>:/W4;/WX>
 )
 ```
 

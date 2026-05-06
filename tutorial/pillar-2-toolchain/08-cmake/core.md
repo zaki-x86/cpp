@@ -97,7 +97,7 @@ For interview purposes: know that the community has not converged, know the trad
 ## Lab
 
 Open `projects/01-toolchain/` in this workspace. Relevant files:
-- `CMakePresets.json` — 14 presets including debug, asan, tsan, ubsan, coverage, pgo-generate, pgo-use, clang-tidy, cross-arm-linux
+- `CMakePresets.json` — presets including debug, asan, tsan, ubsan, coverage, pgo-generate, pgo-use, clang-tidy, cross-arm-linux
 - `cmake/modules/Sanitizers.cmake` — `target_apply_sanitizers()` function
 - `cmake/modules/StandardVersion.cmake` — `require_cpp20()` with INTERFACE detection
 - `cmake/modules/StaticAnalyzers.cmake` — clang-tidy integration
