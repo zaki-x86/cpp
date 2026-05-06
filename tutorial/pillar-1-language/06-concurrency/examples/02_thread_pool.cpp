@@ -45,7 +45,7 @@ public:
             stop_flag_ = true;
         }
         cv_.notify_all();
-        // jthread destructors join all workers automatically.
+        workers_.clear();  // join all threads while cv_ and mu_ are still alive
     }
 
     // Submit a callable with no arguments. Returns a future for the result.

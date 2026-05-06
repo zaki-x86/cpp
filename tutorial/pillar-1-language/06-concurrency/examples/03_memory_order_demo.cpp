@@ -55,10 +55,12 @@ static void demo_message_passing() {
 // Demo 2 — seq_cst vs relaxed timing (single-thread microbenchmark)
 //
 // Incrementing a single atomic 10M times, first with seq_cst (default),
-// then with relaxed. On x86, seq_cst on fetch_add compiles to LOCK XADD
-// (with a full memory fence); relaxed compiles to LOCK XADD without the
-// fence prefix (or a plain ADD if the value is not read). The difference
-// is modest on x86 TSO but visible.
+// then with relaxed.
+// On x86, seq_cst and relaxed fetch_add both emit 'lock addq' — the LOCK
+// prefix is required for atomicity regardless of ordering constraint.
+// The cost difference here is small on x86's TSO model.
+// On ARM/RISC-V, the gap is larger: relaxed emits no barrier while seq_cst
+// emits a full 'dmb ish' fence.
 // ============================================================================
 static void demo_ordering_cost() {
     std::cout << "\n=== Demo 2: seq_cst vs relaxed ordering cost ===\n";
