@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <concepts>
 #include <cstdio>
@@ -106,7 +107,7 @@ static void demo_span() {
 static void demo_jthread() {
     printf("=== Demo: std::jthread with stop_token ===\n");
 
-    int tick_count = 0;
+    std::atomic<int> tick_count{0};
 
     // jthread passes stop_token automatically as first parameter
     std::jthread worker([&tick_count](std::stop_token st) {
@@ -121,7 +122,7 @@ static void demo_jthread() {
 
     // jthread destructor: requests stop, then joins — automatic RAII
     // (worker goes out of scope at end of this function)
-    printf("  tick_count after 350ms: %d (expected ~3)\n", tick_count);
+    printf("  tick_count after 350ms: %d (expected ~3)\n", tick_count.load());
     // jthread will join here when worker goes out of scope
     printf("  jthread auto-joined on scope exit\n\n");
 }

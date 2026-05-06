@@ -15,8 +15,9 @@ swaps internal pointers rather than copying data.
 **Why it underpins everything:**
 - `unique_ptr` *requires* move semantics — it cannot be copied.
 - Standard containers became O(1) to transfer ownership.
-- Algorithms that return containers (e.g. `std::sort`, `std::move` with iterators) became
-  practical.
+- Functions that return containers by value — factory functions, `std::partition`-style
+  algorithms, or simply `vector<T> make_sorted(vector<T> v)` — became O(1): the returned
+  container moves its internal buffer rather than copying all elements.
 
 **The trap:** Answering "lambdas" or "auto". Both are important but neither changes what the
 language *can express*. Lambdas are syntactic sugar for function objects (you could write

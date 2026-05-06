@@ -266,7 +266,7 @@ The missing partner to C++11's `make_shared`. Never write `new` directly:
 // Before C++14 — exception-unsafe if second allocation throws before unique_ptr takes ownership
 f(std::unique_ptr<Widget>(new Widget()), make_gadget());
 
-// C++14 — safe: make_unique performs allocation+construction atomically
+// C++14 — safe: allocation and `unique_ptr` construction are a single call; no other argument evaluation can interleave between them
 f(std::make_unique<Widget>(), make_gadget());
 ```
 
