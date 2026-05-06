@@ -72,7 +72,7 @@ public:
 };
 ```
 
-This is how `std::function`, `std::any`, and C++20 `std::ranges::owning_view` are implemented internally. The outer type is stable and copyable. The inner model is invisible to the caller. No inheritance required on the stored type.
+This is how `std::function` and `std::any` are implemented internally. The outer type is stable and copyable. The inner model is invisible to the caller. No inheritance required on the stored type.
 
 ---
 
@@ -235,6 +235,10 @@ Key decisions:
 
 **C++20 lock-free read path:**
 
+> **Note (GCC 12+ only):** `std::atomic<std::shared_ptr<T>>` partial specialization
+> requires libstdc++ 12 (GCC 12+). On GCC 11, use `std::atomic_load` / `std::atomic_store`
+> free functions from `<memory>` instead.
+
 ```cpp
 std::atomic<std::shared_ptr<std::vector<Observer*>>> observers_;
 ```
@@ -351,15 +355,15 @@ public:
 ```cpp
 struct LambdaCommand : Command {
     std::function<void()> do_fn, undo_fn;
+    LambdaCommand(std::function<void()> d, std::function<void()> u)
+        : do_fn(std::move(d)), undo_fn(std::move(u)) {}
     void execute() override { do_fn(); }
     void undo()    override { undo_fn(); }
 };
 
 history.execute(std::make_unique<LambdaCommand>(
-    LambdaCommand{
-        [&]{ text.insert(pos, ch); },
-        [&]{ text.erase(pos, 1);   }
-    }
+    [&]{ text.insert(pos, 1, ch); },
+    [&]{ text.erase(pos, 1);      }
 ));
 ```
 
