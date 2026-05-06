@@ -148,7 +148,7 @@ would cost a re-discovery round trip on re-activation).
 The launch file automates the configure → activate sequence:
 
 ```python
-# From mobile_robot.launch.py (conceptual — actual file uses TimerAction + EmitEvent)
+# From mobile_robot.launch.py
 from launch_ros.actions import LifecycleNode
 from launch.actions import TimerAction, EmitEvent
 from launch_ros.events.lifecycle import ChangeState
@@ -163,12 +163,12 @@ odometry = LifecycleNode(
 
 # After 1 second, configure
 configure_event = EmitEvent(event=ChangeState(
-    lifecycle_node_matcher=matches_action(odometry),
+    lifecycle_node_matcher=lambda node: node is odometry,
     transition_id=Transition.TRANSITION_CONFIGURE))
 
 # After 2 seconds, activate
 activate_event = EmitEvent(event=ChangeState(
-    lifecycle_node_matcher=matches_action(odometry),
+    lifecycle_node_matcher=lambda node: node is odometry,
     transition_id=Transition.TRANSITION_ACTIVATE))
 
 return LaunchDescription([

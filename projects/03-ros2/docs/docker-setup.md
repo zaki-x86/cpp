@@ -208,7 +208,7 @@ Expected output: `Summary: 4 packages finished`.
 docker compose run --rm dev bash -c "cd /ros2_ws && colcon test --event-handlers console_direct+ && colcon test-result --verbose"
 ```
 
-Expected: 18 tests, 0 errors, 0 failures. Packages tested: `arm_controller` (5 PID tests),
+Expected: 15 tests, 0 errors, 0 failures. Packages tested: `arm_controller` (5 PID tests),
 `mobile_robot` (5 A* tests), `sensor_fusion` (5 complementary filter tests).
 
 ### Run mobile_robot demo

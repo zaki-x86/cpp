@@ -66,21 +66,26 @@ The macro also registers this factory in a shared library symbol table, discover
 
 ```cmake
 # From arm_controller/CMakeLists.txt
-add_library(joint_state_publisher SHARED src/joint_state_publisher.cpp)
-add_library(pid_controller        SHARED src/pid_controller.cpp src/pid_logic.cpp)
-add_library(trajectory_server     SHARED src/trajectory_server.cpp)
-add_library(gripper_service       SHARED src/gripper_service.cpp)
 
-# Register each library as a component — enables runtime discovery
-rclcpp_components_register_nodes(joint_state_publisher "arm_controller::JointStatePublisher")
-rclcpp_components_register_nodes(pid_controller        "arm_controller::PidController")
-rclcpp_components_register_nodes(trajectory_server     "arm_controller::TrajectoryServer")
-rclcpp_components_register_nodes(gripper_service       "arm_controller::GripperService")
+# All four components are compiled into one shared library
+add_library(arm_components SHARED
+  src/joint_state_publisher.cpp
+  src/pid_controller.cpp
+  src/trajectory_server.cpp
+  src/gripper_service.cpp)
+ament_target_dependencies(arm_components rclcpp rclcpp_components rclcpp_action sensor_msgs custom_interfaces)
+target_link_libraries(arm_components pid_lib)
 
-# The manager executable links all component libraries
+# Register all components in one call — enables runtime discovery via ament index
+rclcpp_components_register_nodes(arm_components
+  "arm_controller::JointStatePublisher"
+  "arm_controller::PidController"
+  "arm_controller::TrajectoryServer"
+  "arm_controller::GripperService")
+
+# The manager executable links the combined component library
 add_executable(arm_component_manager src/arm_component_manager.cpp)
-target_link_libraries(arm_component_manager
-    joint_state_publisher pid_controller trajectory_server gripper_service)
+target_link_libraries(arm_component_manager arm_components)
 ```
 
 `rclcpp_components_register_nodes()` writes metadata to the ament index so that
