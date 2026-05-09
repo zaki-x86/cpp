@@ -18,12 +18,18 @@
 
 ## Project Structure
 - Each project: `projects/<NN-name>/` with its own CMakeLists.txt + CMakePresets.json.
+- Tutorial: `tutorial/` — 24-chapter C++ bible authored by Forge (5 pillars: language, toolchain, systems, domain-systems, visual). Sub-plans: `docs/superpowers/plans/2026-05-06-cpp-bible-NN-*.md`.
 - Specs: `docs/superpowers/specs/` | Plans: `docs/superpowers/plans/`
 - All docs/diagrams as `.md` with Mermaid blocks — no browser tools.
+
+## Planning Conventions
+- Sub-plans: split large implementation plans by pillar/phase when content exceeds ~1000 lines. Naming: `YYYY-MM-DD-<project>-NN-<phase>.md`.
+- Background agent transcripts are JSONL (`/tmp/claude-1000/.../tasks/*.output`) — do not Read directly; check file existence with `ls` instead.
 
 ## Multi-Agent System
 - Two AI agents collaborate on this workspace. Each owns `.agents/<name>/` with an `identity.md` and a `log.md`.
 - **Atlas** (`claude-sonnet-4-6`) — lead C++ infrastructure agent. Log: `.agents/atlas/log.md`.
+- **Forge** (`claude-sonnet-4-6`) — tutorial authoring agent. Log: `.agents/forge/log.md`. Owns `tutorial/`.
 - Before starting any task, read all `.agents/*/log.md` files to see what is claimed or in progress.
 - After completing any task, append a timestamped entry to your own log (format in `.agents/README.md`).
 - Cross-agent handoffs go in `.agents/incoming/`. Log files are gitignored; identity files are committed.
