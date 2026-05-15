@@ -1,0 +1,256 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1.25rem 1rem;font-family:var(--font-sans)}
+.tabs{display:flex;gap:6px;margin-bottom:1.25rem}
+.tab{font-size:13px;padding:6px 14px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.tab.on{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.scene{position:relative;width:100%;height:280px;margin-bottom:1rem}
+.mem-col{position:absolute;top:0;bottom:0;width:140px;display:flex;flex-direction:column;gap:0}
+.col-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-secondary);margin-bottom:8px;text-align:center}
+.mem-slot{border:1px solid var(--color-border-secondary);border-radius:6px;padding:7px 10px;margin-bottom:6px;background:var(--color-background-secondary);transition:all .4s}
+.mem-slot .addr{font-size:10px;font-family:var(--font-mono);color:var(--color-text-secondary)}
+.mem-slot .name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:2px 0}
+.mem-slot .val{font-size:11px;font-family:var(--font-mono);color:var(--color-text-secondary)}
+.mem-slot.alive{border-color:#1D9E75;background:#E1F5EE}
+.mem-slot.alive .name{color:#085041}
+.mem-slot.alive .addr{color:#0F6E56}
+.mem-slot.copying{border-color:#185FA5;background:#E6F1FB;animation:pulse .5s ease}
+.mem-slot.moved{border-color:#BA7517;background:#FAEEDA}
+.mem-slot.moved .name{color:#633806}
+.mem-slot.dead{border-color:var(--color-border-tertiary);background:var(--color-background-primary);opacity:.4}
+.mem-slot.ghost{border-style:dashed;opacity:.35}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.arrow-area{position:absolute;top:28px;left:0;width:100%;height:252px;pointer-events:none}
+.step-expl{font-size:13px;line-height:1.65;color:var(--color-text-secondary);min-height:56px;margin-bottom:1rem}
+.step-expl strong{color:var(--color-text-primary);font-weight:500}
+.code-block{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.75;margin-bottom:.9rem;overflow-x:auto;color:var(--color-text-primary)}
+.hl{background:#FAEEDA;border-radius:3px;padding:1px 4px;color:#633806;font-weight:500}
+.hl-g{background:#E1F5EE;border-radius:3px;padding:1px 4px;color:#085041;font-weight:500}
+.hl-b{background:#E6F1FB;border-radius:3px;padding:1px 4px;color:#0C447C;font-weight:500}
+.nav-row{display:flex;gap:8px;align-items:center}
+button.nav{font-size:13px;padding:6px 16px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;transition:background .15s}
+button.nav:hover{background:var(--color-background-secondary)}
+button.nav:disabled{opacity:.3;cursor:default}
+button.nav.pri{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+button.nav.pri:hover{opacity:.85}
+.progress{font-size:12px;color:var(--color-text-secondary);margin-left:auto}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;margin-left:6px}
+.badge.bad{background:#FCEBEB;color:#A32D2D}
+.badge.ok{background:#E1F5EE;color:#085041}
+.badge.best{background:#E6F1FB;color:#0C447C}
+.cost-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.cost-card{flex:1;min-width:100px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.cost-card .cc-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.cost-card .cc-val{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.cost-card .cc-unit{font-size:11px;color:var(--color-text-secondary)}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Interactive explainer showing three approaches to returning a large object from a C++ function: copy, move, and RVO, with step-by-step memory diagrams.</h2>
+
+<div class="tabs">
+  <button class="tab on" onclick="switchMode('copy')">1. The old way (copy)</button>
+  <button class="tab" onclick="switchMode('move')">2. Move semantics</button>
+  <button class="tab" onclick="switchMode('rvo')">3. RVO (what actually happens)</button>
+</div>
+
+<div class="cost-row" id="cost-row">
+  <div class="cost-card"><div class="cc-label">Memory copies</div><div class="cc-val" id="cc-copies">—</div><div class="cc-unit">of the full matrix</div></div>
+  <div class="cost-card"><div class="cc-label">Wasted allocations</div><div class="cc-val" id="cc-allocs">—</div><div class="cc-unit">temporary objects</div></div>
+  <div class="cost-card"><div class="cc-label">Extra cost</div><div class="cc-val" id="cc-cost">—</div></div>
+</div>
+
+<div class="scene" id="scene">
+  <svg class="arrow-area" id="arrows" viewBox="0 0 600 252" preserveAspectRatio="none">
+    <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g id="arrow-copy-1" opacity="0"><path d="M148 80 C 220 80 220 80 290 80" fill="none" stroke="#185FA5" stroke-width="1.5" marker-end="url(#ah2)" stroke-dasharray="4 3"/><text x="210" y="72" font-size="10" fill="#185FA5" font-family="var(--font-sans)" text-anchor="middle">copy 36 doubles</text></g>
+    <g id="arrow-copy-2" opacity="0"><path d="M438 80 C 500 80 500 80 452 80" fill="none" stroke="#185FA5" stroke-width="1.5" marker-end="url(#ah2)" stroke-dasharray="4 3"/><text x="490" y="72" font-size="10" fill="#185FA5" font-family="var(--font-sans)" text-anchor="middle">copy again</text></g>
+    <g id="arrow-move-1" opacity="0"><path d="M148 80 C 220 80 220 80 290 80" fill="none" stroke="#BA7517" stroke-width="1.5" marker-end="url(#ah2)"/><text x="210" y="72" font-size="10" fill="#BA7517" font-family="var(--font-sans)" text-anchor="middle">steal pointer</text></g>
+    <g id="arrow-move-2" opacity="0"><path d="M438 80 C 500 80 500 80 452 80" fill="none" stroke="#BA7517" stroke-width="1.5" marker-end="url(#ah2)"/><text x="490" y="72" font-size="10" fill="#BA7517" font-family="var(--font-sans)" text-anchor="middle">steal pointer</text></g>
+    <g id="arrow-rvo" opacity="0"><path d="M452 80 C 490 60 530 50 540 80 C 530 110 490 100 452 95" fill="none" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah2)"/><text x="540" y="68" font-size="10" fill="#1D9E75" font-family="var(--font-sans)" text-anchor="start">built here</text><text x="540" y="82" font-size="10" fill="#1D9E75" font-family="var(--font-sans)" text-anchor="start">directly!</text></g>
+  </svg>
+</div>
+
+<div class="code-block" id="code-area"></div>
+<div class="step-expl" id="expl-area"></div>
+
+<div class="nav-row">
+  <button class="nav" id="btn-prev" onclick="prev()" disabled>← Back</button>
+  <button class="nav pri" id="btn-next" onclick="next()">Next →</button>
+  <span class="progress" id="progress"></span>
+</div>
+</div>
+
+<script>
+const modes = {
+copy:{
+  costs:{copies:'2',allocs:'1',cost:'288 bytes wasted'},
+  steps:[
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[36 doubles]',cls:'alive'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'(empty)',cls:'ghost'}
+      ],
+      arrows:[],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    <span class="hl-g">Matrix J;</span>          <span class="hl-g">// J is born here, at address 0x1000</span>\n    J(0,0) = ...;      // fill in 36 values\n    return J;          // ← what happens here?\n}`,
+      expl:`<strong>Inside the function,</strong> a local variable <code>J</code> is created and filled with 36 doubles (a 6×6 matrix). It lives at memory address <code>0x1000</code>. The caller has reserved space for the result at <code>0x2000</code>, but it's empty. Now we hit <code>return J</code> — what does C++ do?`
+    },
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[36 doubles]',cls:'alive'},
+        {col:1,label:'Temporary (hidden!)',addr:'0x1800',name:'__tmp',val:'[36 doubles]',cls:'copying'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'(empty)',cls:'ghost'}
+      ],
+      arrows:['arrow-copy-1'],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    Matrix J;\n    J(0,0) = ...;\n    <span class="hl">return J;</span>  <span class="hl">// OLD C++: copies J into a hidden temporary</span>\n               <span class="hl">// 36 doubles × 8 bytes = 288 bytes copied</span>\n}`,
+      expl:`In old C++ (before C++11), <code>return J</code> triggers a <strong>copy</strong>. The compiler creates a hidden temporary object <code>__tmp</code> at <code>0x1800</code> and copies all 36 doubles into it. This is the first full copy — 288 bytes of work just to get the value out of the function.`
+    },
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[dead]',cls:'dead'},
+        {col:1,label:'Temporary (hidden!)',addr:'0x1800',name:'__tmp',val:'[36 doubles]',cls:'alive'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'(empty)',cls:'ghost'}
+      ],
+      arrows:['arrow-copy-1'],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    Matrix J;\n    J(0,0) = ...;\n    return J;\n}  <span class="hl">// J is destroyed here — its memory is freed</span>\n   <span class="hl">// But we already paid for a full copy into __tmp</span>`,
+      expl:`Once <code>return</code> completes, the local variable <code>J</code> is destroyed — its memory at <code>0x1000</code> is freed. The only surviving copy is in the hidden temporary <code>__tmp</code>. We've already paid for 288 bytes of copying, and we're not done yet.`
+    },
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[dead]',cls:'dead'},
+        {col:1,label:'Temporary (hidden!)',addr:'0x1800',name:'__tmp',val:'[36 doubles]',cls:'copying'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'[36 doubles]',cls:'alive'}
+      ],
+      arrows:['arrow-copy-2'],
+      code:`<span class="hl">Matrix result = compute_jacobian(angles);</span>\n<span class="hl">// SECOND copy: __tmp → result (another 288 bytes)</span>\n<span class="hl">// Then __tmp is destroyed too</span>\n\n// Total: 2 full copies of 36 doubles each\n// = 576 bytes copied just to return one matrix`,
+      expl:`Back in the caller, the hidden temporary <code>__tmp</code> is now <strong>copied again</strong> into <code>result</code>. That's a second full copy — another 288 bytes. Then <code>__tmp</code> is destroyed. We paid for <strong>2 complete copies</strong> of the matrix just to return it from a function. In a 1 kHz loop, this happens 1,000 times per second.`
+    }
+  ]
+},
+move:{
+  costs:{copies:'0',allocs:'1',cost:'~0 bytes copied'},
+  steps:[
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[36 doubles]',cls:'alive'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'(empty)',cls:'ghost'}
+      ],
+      arrows:[],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    <span class="hl-g">Matrix J;</span>   <span class="hl-g">// J at 0x1000, has 36 doubles</span>\n    J(0,0) = ...;\n    <span class="hl">return J;</span>   <span class="hl">// C++11: compiler sees J is about to die anyway...</span>\n}`,
+      expl:`Same function, but now we're in C++11 or later. <code>J</code> is created and filled at <code>0x1000</code>. When we hit <code>return J</code>, the compiler notices something important: <code>J</code> is a local variable that is <em>about to be destroyed</em> anyway. Why copy all its data if we can just... hand it over?`
+    },
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (local)',val:'[36 doubles]',cls:'moved'},
+        {col:1,label:'Temporary',addr:'0x1800',name:'__tmp',val:'ptr → 0x1000',cls:'moved'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'(empty)',cls:'ghost'}
+      ],
+      arrows:['arrow-move-1'],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    Matrix J;\n    J(0,0) = ...;\n    <span class="hl">return J;</span>\n    <span class="hl">// Move constructor: __tmp steals J's internal pointer</span>\n    <span class="hl">// No data copied — just a pointer reassigned (~8 bytes)</span>\n}`,
+      expl:`Instead of copying, C++11 uses the <strong>move constructor</strong>. The temporary <code>__tmp</code> doesn't copy the 36 doubles — it <em>steals the pointer</em> to them. <code>__tmp</code> now points to the same memory block that <code>J</code> owned. <code>J</code> is left empty (its pointer is set to null). Cost: one pointer assignment — essentially free.`
+    },
+    {
+      slots:[
+        {col:0,label:'Inside function',addr:'0x1000',name:'J  (empty)',val:'ptr = null',cls:'dead'},
+        {col:1,label:'Temporary',addr:'0x1800',name:'__tmp',val:'ptr → data',cls:'moved'},
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'ptr → data',cls:'alive'}
+      ],
+      arrows:['arrow-move-2'],
+      code:`<span class="hl">Matrix result = compute_jacobian(angles);</span>\n<span class="hl">// Move again: result steals __tmp's pointer</span>\n<span class="hl">// Still no data copied</span>\n\n// Total: 0 copies of actual data\n// Just 2 pointer swaps — nanoseconds of work`,
+      expl:`Back in the caller, <code>result</code> <em>moves</em> from <code>__tmp</code> — it steals the pointer again. The 36 doubles never moved. They stayed at the same memory address the entire time. Two pointer swaps happened instead of two full data copies. This is <strong>move semantics</strong> — "hand it over, don't copy it."`
+    }
+  ]
+},
+rvo:{
+  costs:{copies:'0',allocs:'0',cost:'completely free'},
+  steps:[
+    {
+      slots:[
+        {col:2,label:'Caller side — reserved first',addr:'0x2000',name:'result',val:'(space reserved)',cls:'ghost'}
+      ],
+      arrows:[],
+      code:`<span class="hl-b">Matrix result = compute_jacobian(angles);</span>\n<span class="hl-b">// Before the function even runs, the compiler</span>\n<span class="hl-b">// tells it: "build your result directly at 0x2000"</span>`,
+      expl:`RVO (Return Value Optimization) is even smarter. Before <code>compute_jacobian</code> is even called, the compiler looks at the call site and thinks: "the result is going straight into <code>result</code> at <code>0x2000</code>." So it passes the <em>address of <code>result</code></em> into the function as a hidden parameter.`
+    },
+    {
+      slots:[
+        {col:2,label:'Caller side = function writes here',addr:'0x2000',name:'J / result',val:'[building...]',cls:'copying'}
+      ],
+      arrows:['arrow-rvo'],
+      code:`Matrix compute_jacobian(double angles[6]) {\n    <span class="hl-b">Matrix J;</span>   <span class="hl-b">// J IS result — same address 0x2000!</span>\n    J(0,0) = ...;  <span class="hl-b">// writing directly into caller's variable</span>\n    return J;      <span class="hl-b">// no copy, no move — already there</span>\n}`,
+      expl:`Inside the function, the local variable <code>J</code> and the caller's <code>result</code> are <em>the same object at the same address</em>. Every value written into <code>J</code> goes directly into <code>result</code>. There is no temporary. There is no copy. There is no move. The matrix is constructed exactly once, exactly where it's needed.`
+    },
+    {
+      slots:[
+        {col:2,label:'Caller side',addr:'0x2000',name:'result',val:'[36 doubles]',cls:'alive'}
+      ],
+      arrows:[],
+      code:`Matrix result = compute_jacobian(angles);\n<span class="hl-b">// result is already fully populated</span>\n<span class="hl-b">// 0 copies, 0 moves, 0 temporaries</span>\n<span class="hl-b">// The compiler did this automatically</span>\n\n// This is what the comment in your code meant:\n// "With move semantics, this is FREE"`,
+      expl:`The function returns, and <code>result</code> is already fully populated. No data ever moved — it was built in-place. This is RVO. You don't write any special code to get it; the compiler does it automatically whenever it can see that a return value goes directly into a named variable. This is what the original note "this is FREE" meant — RVO makes the return cost literally zero.`
+    }
+  ]
+}
+};
+
+let curMode = 'copy';
+let curStep = 0;
+
+function switchMode(m){
+  curMode = m;
+  curStep = 0;
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('on', ['copy','move','rvo'][i]===m);
+  });
+  render();
+}
+
+function colLeft(c){ return [2, 152, 302, 452][c]+'px'; }
+
+function render(){
+  const mode = modes[curMode];
+  const step = mode.steps[curStep];
+
+  document.getElementById('cc-copies').textContent = mode.costs.copies;
+  document.getElementById('cc-allocs').textContent = mode.costs.allocs;
+  document.getElementById('cc-cost').textContent = mode.costs.cost;
+
+  const scene = document.getElementById('scene');
+  scene.querySelectorAll('.mem-col').forEach(e=>e.remove());
+
+  const cols = {};
+  step.slots.forEach(s=>{
+    if(!cols[s.col]){
+      const div = document.createElement('div');
+      div.className = 'mem-col';
+      div.style.left = colLeft(s.col);
+      div.innerHTML = `<div class="col-label">${s.label||''}</div>`;
+      scene.appendChild(div);
+      cols[s.col] = div;
+    }
+    const slot = document.createElement('div');
+    slot.className = 'mem-slot '+(s.cls||'');
+    slot.innerHTML = `<div class="addr">${s.addr}</div><div class="name">${s.name}</div><div class="val">${s.val}</div>`;
+    cols[s.col].appendChild(slot);
+  });
+
+  ['arrow-copy-1','arrow-copy-2','arrow-move-1','arrow-move-2','arrow-rvo'].forEach(id=>{
+    document.getElementById(id).style.opacity = (step.arrows||[]).includes(id)?'1':'0';
+  });
+
+  document.getElementById('code-area').innerHTML = step.code;
+  document.getElementById('expl-area').innerHTML = step.expl;
+
+  const total = mode.steps.length;
+  document.getElementById('progress').textContent = `Step ${curStep+1} of ${total}`;
+  document.getElementById('btn-prev').disabled = curStep===0;
+  const btn = document.getElementById('btn-next');
+  btn.disabled = curStep===total-1;
+  btn.textContent = curStep===total-1 ? 'Done ✓' : 'Next →';
+}
+
+function next(){ if(curStep<modes[curMode].steps.length-1){curStep++;render();} }
+function prev(){ if(curStep>0){curStep--;render();} }
+
+render();
+</script>

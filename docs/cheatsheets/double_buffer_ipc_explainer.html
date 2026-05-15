@@ -1,0 +1,229 @@
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+.scene { padding: 1.5rem 1rem 1rem; font-family: var(--font-sans); }
+.step-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.step-pill { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; border: 1.5px solid var(--color-border-secondary); color: var(--color-text-secondary); cursor: pointer; transition: all .2s; flex-shrink: 0; }
+.step-pill.active { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.step-pill.done { background: var(--color-background-secondary); border-color: var(--color-border-primary); color: var(--color-text-primary); }
+.step-label { font-size: 13px; color: var(--color-text-secondary); flex: 1; min-width: 120px; }
+.diagram { position: relative; width: 100%; height: 340px; margin-bottom: 1rem; }
+.process-box { position: absolute; border-radius: 10px; border: 1.5px solid var(--color-border-secondary); padding: 10px 14px; background: var(--color-background-primary); }
+.proc-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+.proc-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.proc-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.buffer-row { position: absolute; display: flex; gap: 12px; }
+.buf { border-radius: 8px; border: 1.5px solid var(--color-border-secondary); padding: 8px 14px; min-width: 120px; transition: all .35s; background: var(--color-background-secondary); }
+.buf-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.buf-data { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); }
+.buf.active-read { border-color: #1D9E75; background: #E1F5EE; }
+.buf.active-read .buf-label { color: #0F6E56; }
+.buf.active-write { border-color: #185FA5; background: #E6F1FB; }
+.buf.active-write .buf-label { color: #0C447C; }
+.buf.just-written { border-color: #185FA5; background: #E6F1FB; animation: pulse-blue .6s ease; }
+@keyframes pulse-blue { 0%,100%{background:#E6F1FB} 50%{background:#B5D4F4} }
+.index-box { position: absolute; border-radius: 8px; border: 1.5px solid var(--color-border-secondary); padding: 6px 12px; background: var(--color-background-primary); transition: all .3s; }
+.index-box .idx-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.index-box .idx-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--color-text-primary); text-align: center; }
+.index-box.flipping { animation: flip-idx .5s ease; border-color: #BA7517; background: #FAEEDA; }
+.index-box.flipping .idx-val { color: #854F0B; }
+@keyframes flip-idx { 0%,100%{transform:scale(1)} 40%{transform:scale(1.18)} }
+svg.arrows { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.code-block { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); line-height: 1.7; margin-bottom: .8rem; overflow-x: auto; }
+.hl { background: #FAEEDA; border-radius: 3px; padding: 0 3px; color: #633806; font-weight: 500; }
+.hl-green { background: #E1F5EE; border-radius: 3px; padding: 0 3px; color: #0F6E56; font-weight: 500; }
+.expl { font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: .6rem; }
+.expl strong { color: var(--color-text-primary); font-weight: 500; }
+.nav-row { display: flex; gap: 8px; margin-top: .5rem; }
+button.nav { font-size: 13px; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; transition: background .15s; }
+button.nav:hover { background: var(--color-background-secondary); }
+button.nav:disabled { opacity: .35; cursor: default; }
+button.nav.primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+button.nav.primary:hover { opacity: .85; }
+.arrow-svg { overflow: visible; }
+</style>
+
+<div class="scene">
+  <h2 class="sr-only">Interactive diagram: how lock-free double-buffered shared memory works between a Python vision process and a C++ control loop</h2>
+
+  <div class="step-nav">
+    <div class="step-pill done" id="p0" onclick="goTo(0)">1</div>
+    <div class="step-pill" id="p1" onclick="goTo(1)">2</div>
+    <div class="step-pill" id="p2" onclick="goTo(2)">3</div>
+    <div class="step-pill" id="p3" onclick="goTo(3)">4</div>
+    <div class="step-pill" id="p4" onclick="goTo(4)">5</div>
+    <span class="step-label" id="step-label">Initial state — index points to buffer 0</span>
+  </div>
+
+  <div class="diagram" id="diagram">
+    <div class="process-box" style="top:0;left:0;width:140px;" id="py-box">
+      <div class="proc-label">Writer</div>
+      <div class="proc-name">Python</div>
+      <div class="proc-sub">Vision pipeline<br>~30 FPS</div>
+    </div>
+
+    <div class="process-box" style="top:0;right:0;width:148px;" id="cpp-box">
+      <div class="proc-label">Reader</div>
+      <div class="proc-name">C++</div>
+      <div class="proc-sub">Control loop<br>1,000 Hz</div>
+    </div>
+
+    <div class="buffer-row" style="top:140px;left:50%;transform:translateX(-50%);">
+      <div class="buf active-read" id="buf0">
+        <div class="buf-label" id="buf0-label">Buffer 0 ← current</div>
+        <div class="buf-data" id="buf0-data">x:1.2 y:0.8 z:0.5</div>
+      </div>
+      <div class="buf" id="buf1">
+        <div class="buf-label" id="buf1-label">Buffer 1</div>
+        <div class="buf-data" id="buf1-data">x:1.2 y:0.8 z:0.5</div>
+      </div>
+    </div>
+
+    <div class="index-box" style="top:255px;left:50%;transform:translateX(-50%);" id="idx-box">
+      <div class="idx-label">write_index (atomic)</div>
+      <div class="idx-val" id="idx-val">0</div>
+    </div>
+
+    <svg class="arrows arrow-svg" id="arrows" viewBox="0 0 600 340" preserveAspectRatio="none">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <g id="write-arrow" opacity="0">
+        <path d="M140 60 Q 220 100 230 140" fill="none" stroke="#185FA5" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+        <text x="158" y="95" font-size="11" fill="#185FA5" font-family="var(--font-sans)">writes to</text>
+      </g>
+      <g id="read-arrow" opacity="1">
+        <path d="M460 60 Q 390 100 370 140" fill="none" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+        <text x="398" y="95" font-size="11" fill="#1D9E75" font-family="var(--font-sans)">reads from</text>
+      </g>
+      <g id="swap-arrow" opacity="0">
+        <path d="M300 255 L 300 230" fill="none" stroke="#BA7517" stroke-width="2" marker-end="url(#ah)"/>
+        <text x="308" y="246" font-size="11" fill="#BA7517" font-family="var(--font-sans)">atomic swap!</text>
+      </g>
+      <g id="read-arrow2" opacity="0">
+        <path d="M460 60 Q 430 100 370 140" fill="none" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+        <text x="415" y="95" font-size="11" fill="#1D9E75" font-family="var(--font-sans)">reads from</text>
+      </g>
+    </svg>
+  </div>
+
+  <div id="code-area"></div>
+  <div id="expl-area"></div>
+
+  <div class="nav-row">
+    <button class="nav" id="btn-prev" onclick="prev()" disabled>← Back</button>
+    <button class="nav primary" id="btn-next" onclick="next()">Next →</button>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    label: "Initial state — index points to buffer 0",
+    buf0Class: "active-read", buf0Label: "Buffer 0 ← current", buf0Data: "x:1.2 y:0.8 z:0.5",
+    buf1Class: "", buf1Label: "Buffer 1", buf1Data: "x:1.2 y:0.8 z:0.5",
+    idxVal: "0", idxClass: "",
+    writeArrow: 0, readArrow: 1, swapArrow: 0, readArrow2: 0,
+    code: `<span class="hl-green">// C++ reads buffer 0 (index = 0)</span>
+int idx = shm->write_index.load();  <span class="hl-green">// → 0</span>
+PoseData pose = shm->buffers[<span class="hl-green">0</span>];   // reads buffer 0`,
+    expl: `<strong>Starting state.</strong> The atomic index is <strong>0</strong>, meaning Buffer 0 holds the latest camera data. The C++ control loop reads from Buffer 0 every millisecond. Buffer 1 is idle — it contains a copy of the old data, but nobody cares about it right now.`
+  },
+  {
+    label: "Python detects which buffer is inactive",
+    buf0Class: "active-read", buf0Label: "Buffer 0 ← current (C++ reading)", buf0Data: "x:1.2 y:0.8 z:0.5",
+    buf1Class: "active-write", buf1Label: "Buffer 1 ← Python will write here", buf1Data: "x:1.2 y:0.8 z:0.5",
+    idxVal: "0", idxClass: "",
+    writeArrow: 0, readArrow: 1, swapArrow: 0, readArrow2: 0,
+    code: `<span class="hl">// Python figures out the inactive buffer</span>
+int current = shm->write_index.load();  <span class="hl">// → 0</span>
+int next    = 1 - current;              <span class="hl">// → 1</span>
+<span class="hl">// Buffer 1 is inactive — safe to write</span>`,
+    expl: `The camera detected a new object position. Before writing, Python reads the index — it's 0. So it calculates the <strong>inactive</strong> buffer: <code>1 - 0 = 1</code>. It will write the new data into Buffer 1, which C++ is <em>not</em> currently reading. Both can run simultaneously with no conflict.`
+  },
+  {
+    label: "Python writes new pose into Buffer 1",
+    buf0Class: "active-read", buf0Label: "Buffer 0 ← C++ still reading this", buf0Data: "x:1.2 y:0.8 z:0.5",
+    buf1Class: "just-written", buf1Label: "Buffer 1 ← writing new data...", buf1Data: "x:2.1 y:1.4 z:0.3",
+    idxVal: "0", idxClass: "",
+    writeArrow: 1, readArrow: 1, swapArrow: 0, readArrow2: 0,
+    code: `<span class="hl">// Python writes NEW pose into the inactive buffer</span>
+shm->buffers[<span class="hl">1</span>] = new_pose;
+<span class="hl">// { x:2.1, y:1.4, z:0.3 }</span>
+<span class="hl">// write_index is STILL 0 — C++ keeps reading buffer 0</span>`,
+    expl: `Python writes the new camera data into Buffer 1. <strong>Critically, the index is still 0 during this entire write.</strong> C++ keeps reading Buffer 0 and sees a perfectly clean, unmodified value. There is no race condition — Python is writing to one buffer while C++ reads from the other.`
+  },
+  {
+    label: "Python atomically flips the index to 1",
+    buf0Class: "", buf0Label: "Buffer 0 — now inactive", buf0Data: "x:1.2 y:0.8 z:0.5",
+    buf1Class: "active-read", buf1Label: "Buffer 1 ← NOW current", buf1Data: "x:2.1 y:1.4 z:0.3",
+    idxVal: "1", idxClass: "flipping",
+    writeArrow: 0, readArrow: 0, swapArrow: 1, readArrow2: 0,
+    code: `<span class="hl">// One atomic instruction — no lock needed</span>
+shm->write_index.store(<span class="hl">1</span>, memory_order_release);
+<span class="hl">// The flip is instantaneous and indivisible</span>
+<span class="hl">// C++ will see either 0 or 1 — never "in between"</span>`,
+    expl: `Python flips the index from 0 to 1 with a single <strong>atomic store</strong>. "Atomic" means this operation is instantaneous and indivisible — there is no moment where the index is half-changed or ambiguous. On the next millisecond tick, C++ reads the index and gets 1. It immediately starts reading the fresh data from Buffer 1.`
+  },
+  {
+    label: "C++ reads fresh data from Buffer 1",
+    buf0Class: "", buf0Label: "Buffer 0 — inactive (Python will write here next)",  buf0Data: "x:1.2 y:0.8 z:0.5",
+    buf1Class: "active-read", buf1Label: "Buffer 1 ← C++ reading now", buf1Data: "x:2.1 y:1.4 z:0.3",
+    idxVal: "1", idxClass: "",
+    writeArrow: 0, readArrow: 0, swapArrow: 0, readArrow2: 1,
+    code: `<span class="hl-green">// C++ reads the new pose — no lock, no wait</span>
+int idx = shm->write_index.load();   <span class="hl-green">// → 1</span>
+PoseData pose = shm->buffers[<span class="hl-green">1</span>];    // fresh data!
+<span class="hl-green">// { x:2.1, y:1.4, z:0.3 }</span>
+<span class="hl-green">// Next cycle: Python will write into buffer 0</span>`,
+    expl: `C++ reads the index (now 1) and fetches the fresh pose from Buffer 1. <strong>It never waited. It never blocked.</strong> On the next camera frame, Python will do the whole thing again — but in reverse, writing into Buffer 0 (the now-inactive one) and then flipping the index back to 0. The two sides keep ping-ponging forever.`
+  }
+];
+
+let cur = 0;
+
+function render(i) {
+  const s = steps[i];
+  document.getElementById('step-label').textContent = s.label;
+
+  const b0 = document.getElementById('buf0');
+  b0.className = 'buf ' + s.buf0Class;
+  document.getElementById('buf0-label').textContent = s.buf0Label;
+  document.getElementById('buf0-data').textContent = s.buf0Data;
+
+  const b1 = document.getElementById('buf1');
+  b1.className = 'buf ' + s.buf1Class;
+  document.getElementById('buf1-label').textContent = s.buf1Label;
+  document.getElementById('buf1-data').textContent = s.buf1Data;
+
+  const ib = document.getElementById('idx-box');
+  ib.className = 'index-box ' + s.idxClass;
+  document.getElementById('idx-val').textContent = s.idxVal;
+
+  document.getElementById('write-arrow').style.opacity = s.writeArrow;
+  document.getElementById('read-arrow').style.opacity = s.readArrow;
+  document.getElementById('swap-arrow').style.opacity = s.swapArrow;
+  document.getElementById('read-arrow2').style.opacity = s.readArrow2;
+
+  document.getElementById('code-area').innerHTML = `<div class="code-block">${s.code}</div>`;
+  document.getElementById('expl-area').innerHTML = `<p class="expl">${s.expl}</p>`;
+
+  for(let j=0; j<5; j++) {
+    const p = document.getElementById('p'+j);
+    p.className = 'step-pill' + (j===i ? ' active' : j<i ? ' done' : '');
+  }
+
+  document.getElementById('btn-prev').disabled = i === 0;
+  document.getElementById('btn-next').disabled = i === steps.length - 1;
+  document.getElementById('btn-next').textContent = i === steps.length - 1 ? 'Done ✓' : 'Next →';
+}
+
+function next() { if(cur < steps.length-1) { cur++; render(cur); } }
+function prev() { if(cur > 0) { cur--; render(cur); } }
+function goTo(i) { cur = i; render(cur); }
+
+render(0);
+</script>

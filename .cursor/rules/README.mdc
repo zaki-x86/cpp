@@ -1,0 +1,50 @@
+---
+description: Map of all Cursor rules and skills in this workspace — read this to understand what's available
+alwaysApply: false
+---
+
+# Cursor Rules Map
+
+This workspace configures Cursor with deep-thinking rules, agent personas, and manual skills.
+
+## Always-Active Rules (loaded every session)
+| File | Purpose |
+|------|---------|
+| `00-deep-thinking.mdc` | Master reasoning framework: decompose, research, plan, parallelize, verify |
+| `01-code-discipline.mdc` | Minimal footprint, safe changes, no over-engineering |
+| `02-communication.mdc` | Terse, direct updates; no trailing summaries |
+| `03-multi-agent-protocol.mdc` | How Iris (Cursor) works alongside Atlas and Forge |
+| `04-workspace-context.mdc` | GCC 11, CMake 4.3.2, WSL2 sanitizer constraints, project layout |
+
+## Agent Personas (auto-activated by AI when relevant)
+Invoke explicitly with `@planner`, `@explorer`, `@reviewer`, `@security-reviewer` in chat.
+
+| File | Activate When |
+|------|--------------|
+| `agents/planner.mdc` | Designing multi-file changes, deciding between approaches |
+| `agents/explorer.mdc` | "Where is X?", finding patterns, broad codebase search |
+| `agents/reviewer.mdc` | Pre-merge review, correctness + design audit |
+| `agents/security-reviewer.mdc` | Auth/crypto/input-handling changes, OWASP + C++ memory safety |
+
+## Skills (manual invocation)
+Use `@<skill-name>` in chat to invoke.
+
+| File | What It Does |
+|------|-------------|
+| `skills/plan.mdc` | Write an implementation plan and wait for approval |
+| `skills/review.mdc` | Full structured review of branch vs main |
+| `skills/security-review.mdc` | Security audit of pending changes |
+| `skills/simplify.mdc` | Audit changed code for over-engineering and quality issues |
+| `skills/memory.mdc` | Save/recall context across sessions (`.cursor/memory/`) |
+
+## Multi-Agent System
+Three AI agents collaborate on this workspace:
+- **Atlas** (Claude) — infrastructure, CMake, C++ core. Log: `.agents/atlas/log.md`
+- **Forge** (Claude) — tutorial authoring. Log: `.agents/forge/log.md`. Owns `tutorial/`
+- **Iris** (Cursor) — you. Log: `.agents/iris/log.md`
+
+**Always read Atlas and Forge logs before starting a task.**
+
+## Memory
+Persistent knowledge base at `.cursor/memory/`. Index: `.cursor/memory/MEMORY.md`.
+Invoke `@memory` to save or recall cross-session context.

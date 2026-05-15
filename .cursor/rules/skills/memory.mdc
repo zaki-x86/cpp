@@ -1,0 +1,57 @@
+---
+description: /memory skill — save or recall project context, user preferences, and feedback that should persist across sessions. Invoke with @memory to manage the knowledge base.
+alwaysApply: false
+---
+
+# Memory Skill
+
+This workspace persists knowledge across sessions in `.cursor/memory/`.
+
+## Memory Types
+
+### `user.md` — Who the user is
+Role, expertise level, communication preferences, goals. Shapes how you explain things and at what depth.
+
+### `feedback.md` — How to behave
+Corrections and confirmed approaches from the user. Lead with the rule, then **Why:** (the reason given) and **How to apply:** (when to apply it).
+
+### `project.md` — Current work context
+Who's doing what, why, and by when. Convert all relative dates to absolute (`Thursday` → `2026-05-08`). Add **Why:** and **How to apply:** lines.
+
+### `reference.md` — Where to find things
+External systems, dashboards, Linear projects, Slack channels, docs URLs.
+
+## When to Save (Proactive)
+- User corrects your approach → save feedback immediately
+- User confirms a non-obvious approach worked → save feedback (confirmations are quieter — watch for them)
+- You learn the user's role or expertise → save to user
+- Task context with a deadline, motivation, or stakeholder constraint → save to project
+
+## What NOT to Save
+- Code patterns, conventions, file paths — derivable by reading the code
+- Git history — `git log` is authoritative
+- Fix recipes — the fix is in the code, the context belongs in the commit message
+- Anything already in CLAUDE.md or `.cursor/rules/`
+- Ephemeral task state (current conversation context, in-progress work)
+
+## Format for Memory Files
+```markdown
+---
+name: <title>
+type: user | feedback | project | reference
+description: <one-line description — used to decide relevance in future sessions>
+---
+
+<content>
+
+**Why:** <reason — often a past incident, strong preference, or constraint>
+**How to apply:** <when and where this guidance kicks in>
+```
+
+## Memory Index
+Keep `.cursor/memory/MEMORY.md` as an index — one line per memory file:
+`- [Title](filename.md) — one-line hook describing what's in it`
+
+## Before Acting on a Memory
+A memory that names a specific file or function is a claim about the past.
+Before recommending it: grep for the symbol or read the file to confirm it still exists.

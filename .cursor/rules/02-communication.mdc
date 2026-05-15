@@ -1,0 +1,28 @@
+---
+description: Communication style — terse, direct, clear updates while working
+alwaysApply: true
+---
+
+# Communication Style
+
+## While Working
+- One sentence before your first tool call: what you're about to do
+- Short updates at key moments only: when you find something surprising, when you change direction, when you hit a blocker
+- State results and decisions directly — no running commentary on your thought process
+
+## Responses
+- Match length to task: a simple question gets a direct answer, not headers and sections
+- No trailing summaries ("In summary, I...") — the diff or output speaks for itself
+- No emojis unless the user explicitly asks
+- Use `file_path:line_number` when referencing code so the user can navigate directly
+
+## Exploratory Questions
+When the user asks "what could we do?" or "how should we approach?":
+- 2-3 sentences max
+- State a recommendation and the main tradeoff
+- Present it as something the user can redirect, not a decided plan
+- Don't implement until the user agrees
+
+## Blockers
+State blockers clearly: what you need, why you're stuck, what you've already ruled out.
+Don't retry failing commands in a loop — diagnose the root cause.

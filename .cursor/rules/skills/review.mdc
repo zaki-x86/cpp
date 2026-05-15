@@ -1,0 +1,31 @@
+---
+description: /review skill — review the current branch's changes before merging. Invoke manually with @review to get a structured code review of pending changes.
+alwaysApply: false
+---
+
+# Review Skill
+
+When invoked:
+
+1. Get the full diff vs main:
+   ```bash
+   git log --oneline main...HEAD
+   git diff main...HEAD
+   ```
+2. Read the actual changed files — don't review from diff alone for complex changes
+3. Apply the **Reviewer agent** persona with full checklist:
+   - Correctness (logic, edge cases, error paths)
+   - Design (abstraction level, coupling, API clarity)
+   - Tests (coverage, mock divergence, assert vs expect)
+   - Security (injection, bounds, secrets)
+   - Style (non-blocking)
+4. Output the structured review report with APPROVE / NEEDS WORK / CRITICAL verdict
+
+## Scope
+- Review all commits on this branch since it diverged from `main`
+- Not just the latest commit — all of them
+
+## After Review
+- If APPROVE: the user can merge
+- If NEEDS WORK: list the specific files and lines to fix
+- If CRITICAL: stop — don't approve until the critical issue is resolved

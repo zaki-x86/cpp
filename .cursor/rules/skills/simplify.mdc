@@ -1,0 +1,40 @@
+---
+description: /simplify skill — review recently changed code for over-engineering, duplication, or quality issues, then fix them. Invoke manually with @simplify after a feature is complete.
+alwaysApply: false
+---
+
+# Simplify Skill
+
+When invoked, audit the recently changed code (use `git diff` to identify what changed):
+
+## Step 1: Identify What Changed
+```bash
+git diff HEAD~1 --name-only        # files changed in last commit
+git diff --cached --name-only      # staged changes
+```
+
+## Step 2: Check for Over-Engineering
+- Abstractions with only one concrete use
+- Helper functions called from exactly one place
+- Generic interfaces where a specific one suffices
+- Traits, type-lists, or template machinery added "for future use"
+
+## Step 3: Check for Duplication
+- Three or more similar patterns that could be unified with a real abstraction
+- Copy-pasted logic with minor variations
+- **Only refactor if the duplication is real, not coincidental similarity**
+
+## Step 4: Check for Quality Issues
+- Comments that describe what the code does (delete them — code is self-documenting)
+- Dead code: unreachable branches, unused variables, unused parameters
+- Naming that doesn't match intent (a `list` that's actually a `map`, a `validate` that mutates)
+- Unnecessary default arguments that hide intent
+
+## Step 5: Fix and Report
+- Fix only the issues you found — don't refactor unrelated code
+- Report each fix: `file.cpp:42 — removed redundant null check (value guaranteed non-null by constructor)`
+
+## Rules
+- Don't touch code outside the changed files
+- Don't introduce new abstractions during simplification — simplify means fewer, not different
+- If you find a genuine bug during the audit, report it separately rather than silently fixing it

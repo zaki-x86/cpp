@@ -1,6 +1,6 @@
 # Chapter 01: Memory — The Foundation of Everything
 
-Memory is the lens through which C++ must be understood. Every performance characteristic, every safety concern, every design decision ultimately comes back to how memory is acquired, used, and released. This chapter teaches you to think about memory the way the machine does — and then shows you the C++ tools that make it manageable at scale.
+Memory is the lens through which `C++` must be understood. Every performance characteristic, every safety concern, every design decision ultimately comes back to how memory is acquired, used, and released. This chapter teaches you to think about memory the way the machine does — and then shows you the C++ tools that make it manageable at scale.
 
 **Prerequisites:** Chapter 00-orientation (the compilation pipeline and UB mental model).
 

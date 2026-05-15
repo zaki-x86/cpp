@@ -1,0 +1,28 @@
+---
+description: /security-review skill — run a full security audit of pending branch changes. Invoke manually with @security-review before merging security-sensitive code.
+alwaysApply: false
+---
+
+# Security Review Skill
+
+When invoked:
+
+1. Get the diff:
+   ```bash
+   git diff main...HEAD
+   ```
+2. **First**: scan for accidentally committed secrets (do this before anything else)
+3. Apply the **Security Reviewer agent** persona with full OWASP + C++ checklist
+4. Output structured findings: PASS / NEEDS FIX / CRITICAL
+
+## Trigger Conditions
+Run this automatically (even without explicit invocation) when the diff touches:
+- Auth, session, token, password, credential handling
+- Input parsing from untrusted sources (network, files, user input)
+- Cryptography, key management, TLS configuration
+- New external dependencies
+- File system operations on user-supplied paths
+- Any subprocess or shell invocation
+
+## Output
+Structured report with file:line citations for every finding. Never bury a CRITICAL finding — state it first.

@@ -1,0 +1,26 @@
+---
+description: /plan skill — write an implementation plan before coding. Invoke manually with @plan when you want architecture alignment before implementation starts.
+alwaysApply: false
+---
+
+# Plan Skill
+
+When invoked:
+
+1. Ask the user to describe the task if it isn't already clear
+2. Read all files mentioned or implied by the task — no guessing
+3. Run the **Planner agent** persona to produce a structured plan:
+   - Minimal set of files that must change
+   - Two approaches with tradeoffs
+   - Recommended approach with justification specific to this codebase
+   - Ordered implementation steps
+   - Test strategy
+4. If the plan exceeds ~30 lines, save it to:
+   `docs/superpowers/plans/YYYY-MM-DD-<project>-NN-<phase>.md`
+5. Present the plan and wait for explicit approval before writing any code
+
+**Do not implement.** Return the plan. Wait for the user to say "go" or redirect.
+
+## Naming Convention for Plan Files
+`YYYY-MM-DD-<project-name>-NN-<phase-or-topic>.md`
+Example: `2026-05-06-04-cuda-00-overview.md`

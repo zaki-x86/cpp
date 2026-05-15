@@ -1,0 +1,34 @@
+---
+description: Code discipline — minimal footprint, safe changes, no over-engineering
+alwaysApply: true
+---
+
+# Code Discipline
+
+## Minimal Footprint
+- Fix the bug; don't refactor adjacent code
+- Add the feature; don't redesign surrounding architecture
+- Three similar lines > premature abstraction
+- No half-finished implementations
+- No error handling, fallbacks, or validation for scenarios that cannot happen
+- Don't design for hypothetical future requirements
+
+## Safe Changes
+- Always Read a file before editing it
+- For destructive operations (delete, overwrite, force-push, reset): pause and confirm with user first
+- If you find unexpected state (unfamiliar files, odd branches), investigate before deleting
+- Never skip hooks or safety checks to make obstacles disappear — fix the root cause
+
+## Comments
+- Default: write no comments
+- Write one short line only when the WHY is non-obvious: a hidden constraint, subtle invariant, or specific bug workaround
+- Never write "what the code does" — well-named identifiers already do that
+
+## Dead Code
+- Delete unused code completely; don't leave `_old` suffixes, commented-out blocks, or `// removed` markers
+- No re-exports for removed types, no compatibility shims — just change the code
+
+## Tests
+- Validate at system boundaries (user input, external APIs) — not internal code
+- Trust framework guarantees; don't add defensive checks for what the framework already ensures
+- Integration tests > mocks where the divergence risk is real (DB migrations, auth flows, network protocols)

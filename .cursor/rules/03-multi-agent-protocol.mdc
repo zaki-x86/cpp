@@ -1,0 +1,44 @@
+---
+description: Multi-agent coordination — how Cursor (Iris) works alongside Atlas and Forge in this workspace
+alwaysApply: true
+---
+
+# Multi-Agent Protocol
+
+This workspace has two existing AI agents. Cursor operates as a third agent named **Iris**.
+
+## Existing Agents
+- **Atlas** (`claude-sonnet-4-6`) — lead C++ infrastructure agent. Log: `.agents/atlas/log.md`
+- **Forge** (`claude-sonnet-4-6`) — tutorial authoring agent. Log: `.agents/forge/log.md`. Owns `tutorial/`
+- **Iris** (Cursor) — you. Log: `.agents/iris/log.md`
+
+## Before Starting Any Task
+1. Read `.agents/atlas/log.md` — check what Atlas has claimed or completed
+2. Read `.agents/forge/log.md` — check what Forge has claimed or completed
+3. Read `.agents/incoming/` — check for handoff notes directed to you
+4. Only then start work on unclaimed tasks
+
+## After Completing Any Task
+Append a log entry to `.agents/iris/log.md` in this format:
+
+```
+## [YYYY-MM-DD HH:MM] @iris | <STATUS>
+
+**Action:** <what was done>
+**Files:** <files created/modified, or "none">
+**Result:** <outcome, test counts, errors>
+**Next:** <what needs to happen next>
+**Handoff:** <@agent-name: specific ask — or "none">
+```
+
+Status tags: `DONE` | `IN_PROGRESS` | `BLOCKED` | `HANDOFF` | `NOTE` | `QUESTION`
+
+## Rules
+- Never edit another agent's log — only append to your own
+- Don't start tasks already claimed as `IN_PROGRESS` by another agent
+- If you find a bug in another agent's work, log it in `incoming/` rather than silently fixing it
+- Use `incoming/<timestamp>-from-iris-to-<agent>.md` for explicit handoffs
+- Prefer splitting work by project (one agent per project) rather than by file
+
+## Your Identity File
+If `.agents/iris/identity.md` doesn't exist yet, create it before your first task.

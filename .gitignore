@@ -1,5 +1,5 @@
 # CMake build directories
-build/
+**/build/
 build-*/
 out/
 
@@ -38,3 +38,7 @@ coverage/
 *.profdata
 default.profdata
 .agents/*/log.md
+
+# Worktrees (agent/dev)
+.worktrees/
+worktrees/
